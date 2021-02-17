@@ -1,8 +1,7 @@
-# REMAP DEMAIL File Classifier
+# reforg - Organize Files Based on Regular Expressions
 
-`remap-demail-classifer` is a command line application written in
-Python3. It classifies fetched DEMAIL attachment files using a regex
-specification.
+`reforg` is a command line application written in Python(3). It reorganizes
+files under given directories based on a set of regex-powered rules.
 
 There are no specific requirements for the application to run other
 than `>= Python3.6`.
@@ -10,14 +9,22 @@ than `>= Python3.6`.
 CLI arguments are as follows:
 
 ```
-./remap-demail-classifer <SPEC-FILE> <PREFIX-REGEX> <IGNORE-FILE> <DEMAIL-DIR>
-```
+$ ./reforg --help
+usage: reforg [-h] --spec SPEC [--ignore IGNORE] [--prefix PREFIX] --root ROOT
+              [--dry-run] [--metadata] [--force]
+              DIRS [DIRS ...]
 
-Example:
+positional arguments:
+  DIRS
 
-```
-./remap-demail-classifer spec.csv \
-	'^(?P<recdate>[0-9]{4}\-[0-9]{2}\-[0-9]{2})T[0-9]{2}:[0-9]{2}:[0-9]{2}Z_[A-Z0-9]{32}_[A-Z0-9]{32}_' \
-	tmp/ignore.dat \
-	/data/remap/tenants/deployment/demail/downloaded
+optional arguments:
+  -h, --help       show this help message and exit
+  --spec SPEC      Specification file
+  --ignore IGNORE  Blacklist file (names of files to ignore)
+  --prefix PREFIX  Regular expression prefix for all patterns in the
+                   specification file
+  --root ROOT      Root directory to copy renamed files to
+  --dry-run        Dry run
+  --metadata       Preserve metadata
+  --force          Force copy even if the target exists
 ```
