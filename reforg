@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import argparse
-import csv
+import json
 import re
 import shutil
 import sys
 from enum import Enum, auto
 from pathlib import Path
-from typing import Iterable, List, NamedTuple, Optional, Pattern, Set, TextIO
+from typing import Dict, Iterable, List, NamedTuple, Optional, Pattern
 
 #: Application version.
 __version__ = "0.0.1.dev0"
@@ -23,13 +23,13 @@ class Config(NamedTuple):
     Program configuration.
     """
 
-    #: Specifications.
-    specs: List["Spec"]
+    #: Copy rules.
+    rules: List["Rule"]
 
-    #: Ignored files.
-    ignores: Set[str]
+    #: Ignore patterns.
+    ignores: List[Pattern[str]]
 
-    #: Root directory.
+    #: Root directory to copy files to.
     root: Path
 
     #: Preserve metadata?
@@ -38,32 +38,36 @@ class Config(NamedTuple):
     #: Force overwrite?
     force: bool
 
-    #: Dry-run:
+    #: Dry run?
     dryrun: bool
+
+    #: Are we on a terminal?
+    terminal: bool
 
     #: Directories to traverse:
     dirs: List[Path]
 
-    #: Indicates if we are on a terminal:
-    terminal: bool
 
-
-class Spec(NamedTuple):
+class Rule(NamedTuple):
     """
-    Pattern-Template specification.
+    Copy rule.
     """
 
     #: Original filename pattern.
-    pattern: Pattern
+    regex: Pattern[str]
 
     #: Target filename template.
     template: str
 
     #: Sub directory for the target file.
-    subdir: Path
+    directory: str
 
 
 class TColor:
+    """
+    Terminal colors.
+    """
+
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
@@ -77,7 +81,7 @@ class TColor:
 
 class Status(Enum):
     """
-    Indicates the copy status.
+    Copy status indication.
     """
 
     DRYRUN = auto()
@@ -103,13 +107,13 @@ def existingdir(x: str) -> Path:
     return path
 
 
-def compile_specs(cfile: TextIO, prefix: str) -> List[Spec]:
+def compile_rules(rules: List[Dict[str, str]], prefix: str) -> List[Rule]:
     """
-    Reads given file and compiles specs.
+    Compiles copy rules.
     """
     return [
-        Spec(re.compile(prefix + r["pattern"]), r["template"], Path(r["directory"]))
-        for r in csv.DictReader(cfile)
+        Rule(re.compile(prefix + r["regex"]), r["filename"], r["directory"])
+        for r in rules
     ]
 
 
@@ -118,61 +122,70 @@ def parse_cli_arguments() -> Config:
     Parses and return arguments.
     """
     ## Define the parser:
-    parser = argparse.ArgumentParser(prog="reforg")
+    parser = argparse.ArgumentParser(
+        prog=f"reforg",
+        description="Organize files based on regular expressions",
+        epilog=f"reforg -- v{__version__}",
+    )
 
     ## Add specification file:
     parser.add_argument(
-        "--spec", required=True, type=argparse.FileType("r"), help="Specification file"
-    )
-
-    ## Add blacklist file:
-    parser.add_argument(
-        "--ignore",
-        required=False,
+        "--spec",
+        metavar="SPEC-FILE",
+        required=True,
         type=argparse.FileType("r"),
-        help="Blacklist file (names of files to ignore)",
-    )
-
-    ## Add regex prefix:
-    parser.add_argument(
-        "--prefix",
-        required=False,
-        help="Regular expression prefix for all patterns in the specification file",
+        help="Specification file",
     )
 
     ## Add root firectory to clone files to:
     parser.add_argument(
         "--root",
+        metavar="ROOT-DIR",
         required=True,
         type=existingdir,
-        help="Root directory to copy renamed files to",
+        help="Root directory to copy processed files to",
     )
 
     ## Add dry-run:
-    parser.add_argument("--dry-run", action="store_true", help="Dry run")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Dry run (do not copy anything)"
+    )
 
     ## Add flag to preserve metadata:
-    parser.add_argument("--metadata", action="store_true", help="Preserve metadata")
+    parser.add_argument(
+        "--metadata", action="store_true", help="Preserve metadata while copying"
+    )
 
     ## Add flag to force copy:
-    parser.add_argument("--force", action="store_true", help="Force copy even if the target exists")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force copy if target exists (overwrite existing files)",
+    )
 
     ## Add directories to traverse
-    parser.add_argument("dirs", metavar="DIRS", type=existingdir, nargs="+")
+    parser.add_argument(
+        "dirs",
+        metavar="DIR",
+        type=existingdir,
+        nargs="+",
+        help=(
+            "Directory to list files of to process. "
+            "Note that special entries in the directory and sub-directories "
+            "are not listed and therefore not processed."
+        ),
+    )
 
     ## Parse arguments:
     args = parser.parse_args()
 
-    ## Compile specifications:
-    specs = compile_specs(args.spec, args.prefix or "")
-
-    ## Compile ignores set:
-    ignores = args.ignore and set(i.strip() for i in args.ignore.readlines()) or set([])
+    ## Load the spec file:
+    spec = json.load(args.spec)
 
     ## Build config and return:
     return Config(
-        specs=specs,
-        ignores=ignores,
+        rules=compile_rules(spec.get("rules", []), spec.get("prefix", "")),
+        ignores=[re.compile(i) for i in spec.get("ignore", [])],
         root=args.root,
         force=args.force,
         metadata=args.metadata,
@@ -187,17 +200,17 @@ def parse_cli_arguments() -> Config:
 ###############
 
 
-def classify(parent: Path, specs: List[Spec], path: Path) -> Optional[Path]:
+def classify(config: Config, path: Path) -> Optional[Path]:
     """
     Attempts to classify the given path as per given patterns.
     """
     ## Get and trim filename:
-    filename = path.name.strip()
+    filename = path.name
 
-    ## Iterate over specs:
-    for spec in specs:
+    ## Iterate over rules:
+    for rule in config.rules:
         ## Attempt to match:
-        match = spec.pattern.match(filename)
+        match = rule.regex.match(filename)
 
         ## If we have a match, get groups, skip otherwise:
         if match:
@@ -206,16 +219,25 @@ def classify(parent: Path, specs: List[Spec], path: Path) -> Optional[Path]:
 
             ## Attempt to compile the target filename:
             try:
-                newfilename = spec.template.format(**groups)
+                newfilename = rule.template.format(**groups)
+                directory = Path(rule.directory.format(**groups))
             except KeyError as err:
                 print(err)
                 print(path)
+                raise err
 
             ## Build and return the target path:
-            return parent / spec.subdir / newfilename
+            return config.root / directory / newfilename
 
     ## We do not have any match, return None:
     return None
+
+
+def is_ignored(ignores: List[Pattern[str]], filename: str) -> bool:
+    for ignore in ignores:
+        if ignore.match(filename):
+            return True
+    return False
 
 
 def traverse(config: Config) -> Iterable[Path]:
@@ -224,7 +246,7 @@ def traverse(config: Config) -> Iterable[Path]:
     """
     for pdir in config.dirs:
         for path in (i for i in pdir.iterdir() if i.is_file()):
-            if path.name in config.ignores:
+            if is_ignored(config.ignores, path.name):
                 continue
             yield path
 
@@ -233,7 +255,9 @@ def print_term(orig: Path, copy: Path, status: Status) -> None:
     """
     Print operation on a terminal.
     """
-    print(f"{TColor.WARNING}{status.name} {TColor.OKBLUE}{orig}{TColor.ENDC} -> {TColor.OKGREEN}{copy}{TColor.ENDC}")
+    print(
+        f"{TColor.WARNING}{status.name} {TColor.OKBLUE}{orig}{TColor.ENDC} -> {TColor.OKGREEN}{copy}{TColor.ENDC}"
+    )
 
 
 def print_nonterm(orig: Path, copy: Path, status: Status) -> None:
@@ -288,15 +312,10 @@ def main() -> None:
     ## Parse config:
     config = parse_cli_arguments()
 
-    ## Print function:
-    printer = print_term if config.terminal else print_nonterm
-
-    ## Copy function:
-    
     ## Attempt to classify each path:
     for path in traverse(config):
         ## Attempt:
-        attempt = classify(config.root, config.specs, path)
+        attempt = classify(config, path)
 
         ## Success?
         if attempt is None:

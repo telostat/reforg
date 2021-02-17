@@ -1,0 +1,20 @@
+{
+  "prefix": "^(?P<recdate>[0-9]{4}\\-[0-9]{2}\\-[0-9]{2})_",
+  "rules": [
+    {
+      "regex": "A(?P<id>[0-9]+).txt$",
+      "filename": "{recdate}_{id}.txt",
+      "directory": "./txt/A"
+    },
+    {
+      "regex": "(?P<code>[B-Z])(?P<id>[0-9]+).dat$",
+      "filename": "{recdate}_{id}.dat",
+      "directory": "./dat/{code}"
+    }
+  ],
+  "ignore": [
+    "^.*ignore.*$",
+    "A012.txt",
+    "Z013.dat"
+  ]
+}
