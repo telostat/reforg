@@ -9,7 +9,7 @@ than `>= Python3.6`.
 ## Installation
 
 ```
-curl -o - https://raw.githubusercontent.com/telostat/reforg/main/reforg/install.sh | sudo sh -x
+curl -o - https://raw.githubusercontent.com/telostat/reforg/main/install.sh | sudo sh -x
 ```
 
 ## Usage
