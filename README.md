@@ -6,6 +6,14 @@ files under given directories based on a set of regex-powered rules.
 There are no specific requirements for the application to run other
 than `>= Python3.6`.
 
+## Installation
+
+```
+curl -o - https://raw.githubusercontent.com/telostat/reforg/main/reforg/install.sh | sudo sh -x
+```
+
+## Usage
+
 CLI arguments are as follows:
 
 ```
@@ -61,4 +69,3 @@ argument):
 ```
 yq . < example/spec.yaml | ./reforg --spec - --root example/target/ --metadata --force --dry-run example/source/
 ```
-
