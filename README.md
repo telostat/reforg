@@ -9,10 +9,11 @@
 > reach the first major version.
 
 `reforg` is a command line application written in Python(3). It reorganizes
-files under given directories based on a set of regex-powered rules.
+files under given directories based on a set of regex-powered rules. When
+needed, files can be processed while copying them around.
 
-There are no specific requirements for the application to run other
-than `>= Python3.6`.
+There are no specific requirements for the application to run other than `>=
+Python3.6`.
 
 ## Installation
 
@@ -61,14 +62,13 @@ See [./example/spec.json](./example/spec.json) for an example.
 Note that we are using JSON as specification file format. A much better file
 format would be YAML (or maybe even TOML). However, we want to stick to the idea
 of external *no-dependencies* for easier deployment. We may wish to change that
-in the future.
+in the future (as well as the implementation language).
 
 For convenience, you may wish to write the specification in YAML (as in
 [./example/spec.yaml](./example/spec.yaml)) and then convert to JSON:
 
 ```
-cd example/
-yq . < spec.yaml > spec.json
+yq . < example/spec.yaml > example/spec.json
 ```
 
 ... or pipe converted JSON directly to the command (note the `--spec -`
