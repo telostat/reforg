@@ -4,10 +4,11 @@ import argparse
 import json
 import re
 import shutil
+import subprocess
 import sys
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, Iterable, List, NamedTuple, Optional, Pattern
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Pattern, Tuple
 
 #: Application version.
 __version__ = "0.0.2.dev0"
@@ -62,6 +63,46 @@ class Rule(NamedTuple):
     #: Sub directory for the target file.
     directory: str
 
+    #: Process to run, if any.
+    process: Optional["Process"]
+
+
+class Process(NamedTuple):
+    """
+    External process to run.
+    """
+
+    #: Pipe input file via STDIN?
+    stdin: bool
+
+    #: Pipe output via STDOUT?
+    stdout: bool
+
+    #: Command to run with arguments.
+    command: List[str]
+
+    def run(self, context: Dict[str, str], source: Path, target: Path) -> None:
+        """
+        Runs the command.
+        """
+        ## Process arguments:
+        command = [i.format(**context, source=source, target=target) for i in self.command]
+
+        ## Define stdin, if any:
+        stdin: Any = source.open("rb") if self.stdin else None
+
+        ## Define stdout, if any:
+        stdout: Any = target.open("wb") if self.stdout else subprocess.PIPE
+
+        ## Defines stderr:
+        stderr: Any = subprocess.STDOUT
+
+        ## Run the process:
+        print(
+            f"[DEBUG] Running command (stdin={self.stdin}, stdout={self.stdout}): ", command,
+        )
+        subprocess.run(command, check=True, stdin=stdin, stdout=stdout, stderr=stderr)
+
 
 class TColor:
     """
@@ -112,9 +153,28 @@ def compile_rules(rules: List[Dict[str, str]], prefix: str) -> List[Rule]:
     Compiles copy rules.
     """
     return [
-        Rule(re.compile(prefix + r["regex"]), r["filename"], r["directory"])
+        Rule(
+            re.compile(prefix + r["regex"]),
+            r["filename"],
+            r["directory"],
+            compile_process(r.get("process")),
+        )
         for r in rules
     ]
+
+
+def compile_process(x: Any) -> Optional[Process]:
+    """
+    Attempts to compile the process, if any.
+    """
+    if not x or not x["command"]:
+        return None
+
+    return Process(
+        stdin=x.get("stdin", True),
+        stdout=x.get("stdout", True),
+        command=[str(i) for i in x["command"]],
+    )
 
 
 def parse_cli_arguments() -> Config:
@@ -147,14 +207,10 @@ def parse_cli_arguments() -> Config:
     )
 
     ## Add dry-run:
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Dry run (do not copy anything)"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Dry run (do not copy anything)")
 
     ## Add flag to preserve metadata:
-    parser.add_argument(
-        "--metadata", action="store_true", help="Preserve metadata while copying"
-    )
+    parser.add_argument("--metadata", action="store_true", help="Preserve metadata while copying")
 
     ## Add flag to force copy:
     parser.add_argument(
@@ -200,7 +256,7 @@ def parse_cli_arguments() -> Config:
 ###############
 
 
-def classify(config: Config, path: Path) -> Optional[Path]:
+def classify(config: Config, path: Path) -> Optional[Tuple[Rule, Dict[str, str], Path]]:
     """
     Attempts to classify the given path as per given patterns.
     """
@@ -227,7 +283,7 @@ def classify(config: Config, path: Path) -> Optional[Path]:
                 raise err
 
             ## Build and return the target path:
-            return config.root / directory / newfilename
+            return rule, groups, config.root / directory / newfilename
 
     ## We do not have any match, return None:
     return None
@@ -267,7 +323,15 @@ def print_nonterm(orig: Path, copy: Path, status: Status) -> None:
     print(f"{status.name} {orig} -> {copy}")
 
 
-def copier(config: Config, orig: Path, copy: Path) -> None:
+def do_copy_with_metadata(context: Dict[str, str], source: Path, target: Path) -> None:
+    shutil.copy2(str(source), str(target))
+
+
+def do_copy_without_metadata(context: Dict[str, str], source: Path, target: Path) -> None:
+    shutil.copy(str(source), str(target))
+
+
+def copier(config: Config, rule: Rule, context: Dict[str, str], orig: Path, copy: Path) -> None:
     """
     Attempts to copy the file.
     """
@@ -275,7 +339,12 @@ def copier(config: Config, orig: Path, copy: Path) -> None:
         status = Status.DRYRUN
     else:
         ## Get the copier function:
-        copier = shutil.copy2 if config.metadata else shutil.copy
+        if rule.process:
+            copier = rule.process.run
+        elif config.metadata:
+            copier = do_copy_with_metadata
+        else:
+            copier = do_copy_with_metadata
 
         ## Get the target parent directory:
         parent = copy.parent
@@ -285,12 +354,12 @@ def copier(config: Config, orig: Path, copy: Path) -> None:
 
         ## Check whether target exists, and copy accordingly:
         if copy.exists() and config.force:
-            copier(str(orig), str(copy))
+            copier(context, orig, copy)
             status = Status.FORCED
         elif copy.exists():
             status = Status.EXISTS
         else:
-            copier(str(orig), str(copy))
+            copier(context, orig, copy)
             status = Status.COPIED
 
     ## Log it:
@@ -314,15 +383,18 @@ def main() -> None:
 
     ## Attempt to classify each path:
     for path in traverse(config):
-        ## Attempt:
+        ## Attempt to classify:
         attempt = classify(config, path)
 
         ## Success?
         if attempt is None:
             raise Exception(f"Path could not be classified. Filename: {path.name}")
 
+        ## Get rule, context and target path:
+        rule, context, target = attempt
+
         ## Copy:
-        copier(config, path, attempt)
+        copier(config, rule, context, path, target)
 
 
 if __name__ == "__main__":
