@@ -1,5 +1,13 @@
 # reforg - Organize Files Based on Regular Expressions
 
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/telostat/reforg)
+![GitHub contributors](https://img.shields.io/github/contributors/telostat/reforg)
+![GitHub](https://img.shields.io/github/license/telostat/reforg)
+
+> **Note:** This application is under development and of prototype quality at
+> the moment. Expect significant breaking changes without notification until we
+> reach the first major version.
+
 `reforg` is a command line application written in Python(3). It reorganizes
 files under given directories based on a set of regex-powered rules.
 
@@ -17,7 +25,7 @@ curl -o - https://raw.githubusercontent.com/telostat/reforg/main/install.sh | su
 CLI arguments are as follows:
 
 ```
-$ ./reforg --help
+$ reforg --help
 usage: reforg [-h] --spec SPEC-FILE --root ROOT-DIR [--dry-run] [--metadata]
               [--force]
               DIR [DIR ...]
@@ -43,7 +51,7 @@ reforg -- v0.0.1.dev0
 Example:
 
 ```
-./reforg --spec example/spec.json --root example/target/ --metadata --force --dry-run example/source/
+reforg --spec example/spec.json --root example/target/ --metadata --force --dry-run example/source/
 ```
 
 ## Specification Format
@@ -67,5 +75,11 @@ yq . < spec.yaml > spec.json
 argument):
 
 ```
-yq . < example/spec.yaml | ./reforg --spec - --root example/target/ --metadata --force --dry-run example/source/
+yq . < example/spec.yaml | reforg --spec - --root example/target/ --metadata --force --dry-run example/source/
 ```
+
+## License
+
+Copyright Telostat Pte Ltd (c) 2021.
+
+This work is licensed under BSD3. See [LICENSE](./LICENSE).
