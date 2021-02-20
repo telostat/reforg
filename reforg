@@ -148,13 +148,13 @@ def existingdir(x: str) -> Path:
     return path
 
 
-def compile_rules(rules: List[Dict[str, str]], prefix: str) -> List[Rule]:
+def compile_rules(rules: List[Dict[str, str]], prefix: Optional[str]) -> List[Rule]:
     """
     Compiles copy rules.
     """
     return [
         Rule(
-            re.compile(prefix + r["regex"]),
+            re.compile((prefix or "") + r.get("prefix", "") +  r["regex"]),
             r["filename"],
             r["directory"],
             compile_process(r.get("process")),
@@ -240,7 +240,7 @@ def parse_cli_arguments() -> Config:
 
     ## Build config and return:
     return Config(
-        rules=compile_rules(spec.get("rules", []), spec.get("prefix", "")),
+        rules=compile_rules(spec.get("rules", []), spec.get("prefix")),
         ignores=[re.compile(i) for i in spec.get("ignore", [])],
         root=args.root,
         force=args.force,
