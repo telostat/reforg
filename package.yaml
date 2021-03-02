@@ -1,0 +1,79 @@
+name:                reforg
+version:             0.0.3.0
+github:              "telostat/reforg"
+license:             BSD3
+author:              "Vehbi Sinan Tunalioglu"
+maintainer:          "vst@vsthost.com"
+copyright:           "Copyright (c) 2021 Telostat Pte Ltd"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+synopsis:            Organize and Process Files Based on Regular Expressions
+category:            Filesystem, System
+description:         Please see the README on GitHub at <https://github.com/telostat/reforg#readme>
+
+flags:
+  static:
+    description: Use static linking for the main executable
+    default: false
+    manual: true
+
+dependencies:
+- base >= 4.7 && < 5
+- aeson
+- bytestring
+- co-log
+- mtl
+- path >= 0.8 && < 0.9
+- path-io
+- text
+- time
+- typed-process
+- yaml
+
+library:
+  source-dirs: src
+  ghc-options:
+  - -Wall
+  default-extensions:
+  - OverloadedStrings
+
+executables:
+  reforg:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    dependencies:
+    - reforg
+    - optparse-applicative
+    when:
+    - condition: "flag(static) && !(os(osx))"
+      ld-options:
+      - -static
+      - -pthread
+
+tests:
+  reforg-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - reforg
+
+  reforg-doctest:
+    main:                doctest.hs
+    source-dirs:         .
+    ghc-options:
+    - -threaded
+    dependencies:
+    - reforg
+    - doctest

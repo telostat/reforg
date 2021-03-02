@@ -1,0 +1,130 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: ddab99c3f3c738fcfd6746df4d4184d446f964cdd2aff0e445e1f06d700c2497
+
+name:           reforg
+version:        0.0.3.0
+synopsis:       Organize and Process Files Based on Regular Expressions
+description:    Please see the README on GitHub at <https://github.com/telostat/reforg#readme>
+category:       Filesystem, System
+homepage:       https://github.com/telostat/reforg#readme
+bug-reports:    https://github.com/telostat/reforg/issues
+author:         Vehbi Sinan Tunalioglu
+maintainer:     vst@vsthost.com
+copyright:      Copyright (c) 2021 Telostat Pte Ltd
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/telostat/reforg
+
+flag static
+  description: Use static linking for the main executable
+  manual: True
+  default: False
+
+library
+  exposed-modules:
+      System.Process.Reforg
+      System.Process.Reforg.Internal.Class
+      System.Process.Reforg.Internal.Types
+  other-modules:
+      Paths_reforg
+  hs-source-dirs:
+      src
+  default-extensions: OverloadedStrings
+  ghc-options: -Wall
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , co-log
+    , mtl
+    , path >=0.8 && <0.9
+    , path-io
+    , text
+    , time
+    , typed-process
+    , yaml
+  default-language: Haskell2010
+
+executable reforg
+  main-is: Main.hs
+  other-modules:
+      Paths_reforg
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , co-log
+    , mtl
+    , optparse-applicative
+    , path >=0.8 && <0.9
+    , path-io
+    , reforg
+    , text
+    , time
+    , typed-process
+    , yaml
+  if flag(static) && !(os(osx))
+    ld-options: -static -pthread
+  default-language: Haskell2010
+
+test-suite reforg-doctest
+  type: exitcode-stdio-1.0
+  main-is: doctest.hs
+  other-modules:
+      Paths_reforg
+  hs-source-dirs:
+      ./.
+  ghc-options: -threaded
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , co-log
+    , doctest
+    , mtl
+    , path >=0.8 && <0.9
+    , path-io
+    , reforg
+    , text
+    , time
+    , typed-process
+    , yaml
+  default-language: Haskell2010
+
+test-suite reforg-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_reforg
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , co-log
+    , mtl
+    , path >=0.8 && <0.9
+    , path-io
+    , reforg
+    , text
+    , time
+    , typed-process
+    , yaml
+  default-language: Haskell2010
