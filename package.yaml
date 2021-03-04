@@ -25,6 +25,7 @@ dependencies:
 - aeson
 - bytestring
 - co-log
+- containers
 - mtl
 - path >= 0.8 && < 0.9
 - path-io
