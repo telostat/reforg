@@ -26,12 +26,14 @@ dependencies:
 - bytestring
 - co-log
 - containers
+- ginger
 - mtl
 - path >= 0.8 && < 0.9
 - path-io
 - text
 - time
 - typed-process
+- unordered-containers
 - yaml
 
 library:
