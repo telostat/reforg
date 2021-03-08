@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0a609fde4410e857d02d02ec2d2938b5eb7e3543b6ab3a6c96bfadbd06fed6e8
+-- hash: 6624b21446b01f3346221b5d54166230c1e7030e3c9d2298d9c5edd6c3f0dcdf
 
 name:           reforg
 version:        0.0.3.0
@@ -38,6 +38,7 @@ library
       System.Process.Reforg.Internal.Class
       System.Process.Reforg.Internal.Contextual
       System.Process.Reforg.Internal.Fs
+      System.Process.Reforg.Internal.Process
       System.Process.Reforg.Internal.Regex
       System.Process.Reforg.Internal.Templating
       System.Process.Reforg.Internal.Types
@@ -58,6 +59,7 @@ library
     , path >=0.8 && <0.9
     , path-io
     , pcre-light
+    , process
     , text
     , time
     , typed-process
@@ -83,6 +85,7 @@ executable reforg
     , path >=0.8 && <0.9
     , path-io
     , pcre-light
+    , process
     , reforg
     , text
     , time
@@ -112,6 +115,7 @@ test-suite reforg-doctest
     , path >=0.8 && <0.9
     , path-io
     , pcre-light
+    , process
     , reforg
     , text
     , time
@@ -138,6 +142,7 @@ test-suite reforg-test
     , path >=0.8 && <0.9
     , path-io
     , pcre-light
+    , process
     , reforg
     , text
     , time

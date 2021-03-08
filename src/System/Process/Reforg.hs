@@ -16,6 +16,7 @@ import           System.Process.Reforg.Internal.Contextual
                  , updateSpecEnv
                  )
 import           System.Process.Reforg.Internal.Fs         (filterFiles)
+import           System.Process.Reforg.Internal.Process    (checkCondition, runCommands)
 import           System.Process.Reforg.Internal.Regex      (Regex, isMatch, match, mkRegex)
 import           System.Process.Reforg.Internal.Templating (Template, renderTemplate)
 import           System.Process.Reforg.Internal.Types      (Rule(..), Spec(..))
@@ -65,8 +66,12 @@ processFileWithRule f r = case ruleRegex r of
 
 -- | Runs the file as per matched rule.
 runFile :: Rule -> Path Abs File -> Reforg ()
-runFile _ f = C.logInfo $ T.pack $ "Running file: " <> show f
-
+runFile r f = do
+  C.logInfo . T.pack $ "Attempting to run file: " <> toFilePath f
+  proceed <- maybe (pure True) checkCondition (ruleWhen r)
+  if proceed
+    then (C.logDebug . T.pack $ "File will be processed as per pre-condition: " <> toFilePath f) >> runCommands (NE.toList $ ruleProcess r) Nothing
+    else C.logWarning . T.pack $ "File will not be processed as per pre-condition: " <> toFilePath f
 
 -- | Helper function that attempts to compile the regular expression template in the current context.
 compileRegex :: Template -> Reforg Regex

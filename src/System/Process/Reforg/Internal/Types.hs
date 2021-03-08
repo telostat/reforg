@@ -144,7 +144,7 @@ data Command =
     -- by the next process command's STDIN.
     , execStdout      :: !Bool
     -- | Templated name of or path to the executable of the command.
-    , execExecutable  :: !T.Text
+    , execExecutable  :: !Template
     -- | Templated arguments to be passed to the command executable.
     , execArguments   :: ![Template]
     } deriving (Show)

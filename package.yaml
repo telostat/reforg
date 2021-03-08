@@ -30,6 +30,7 @@ dependencies:
 - path >= 0.8 && < 0.9
 - path-io
 - pcre-light
+- process
 - text
 - time
 - typed-process

@@ -6,7 +6,7 @@ import qualified Data.Text                                 as T
 import           Path                                      (Abs, File, Path, fileExtension, filename, toFilePath)
 import           System.Process.Reforg.Internal.Class      (Env(..), Reforg)
 import           System.Process.Reforg.Internal.Templating (Template, renderTemplate)
-import           System.Process.Reforg.Internal.Types      (Rule(..), Spec(..))
+import           System.Process.Reforg.Internal.Types      (Command(..), Rule(..), Spec(..))
 
 
 -- | Default environment.
@@ -49,6 +49,11 @@ updateRuleEnv r = updateParams (ruleParams r) . updateEnvars (ruleEnvars r)
 -- | Updates the environment as per regular expression match
 updateMatchEnv :: HM.HashMap T.Text T.Text -> Env Reforg -> Env Reforg
 updateMatchEnv = updateRevars
+
+
+-- | Updates the environment as per regular expression match
+updateExecEnv :: Command -> Env Reforg -> Env Reforg
+updateExecEnv c = updateParams (execParams c) . updateEnvars (execEnvars c)
 
 
 -- | Updates environment with given environment variable templates.
