@@ -2,11 +2,13 @@
 
 module System.Process.Reforg.Internal.Types where
 
-import           Data.Aeson         ((.!=), (.:), (.:?))
-import qualified Data.Aeson         as Aeson
-import qualified Data.List.NonEmpty as NE
-import qualified Data.Map.Strict    as M
-import qualified Data.Text          as T
+import           Data.Aeson                                ((.!=), (.:), (.:?))
+import qualified Data.Aeson                                as Aeson
+import qualified Data.HashMap.Strict                       as HM
+import qualified Data.List.NonEmpty                        as NE
+import qualified Data.Text                                 as T
+import           System.Process.Reforg.Internal.Regex      (Regex)
+import           System.Process.Reforg.Internal.Templating (Template)
 
 
 -- | Reforg top-level specification definition.
@@ -18,16 +20,16 @@ data Spec = Spec
   , specDescription :: !(Maybe T.Text)
     -- | Templated, key-value map of parameters that override parameters
     -- provided on the command-line.
-  , specParams      :: !(M.Map T.Text T.Text)
+  , specParams      :: !(HM.HashMap T.Text Template)
     -- | Templated, key-value map of environment variables that override
     -- environment variables found on the Reforg process environment and
     -- provided on the command line.
-  , specEnvars      :: !(M.Map T.Text T.Text)
+  , specEnvars      :: !(HM.HashMap T.Text Template)
     -- | Non-empty list of rules that will be tried for each file traversed.
   , specRules       :: !(NE.NonEmpty Rule)
     -- | Templated list of regular expressions to filter-out files to be
     -- processed.
-  , specIgnore      :: ![String]
+  , specIgnore      :: ![Regex]
   } deriving (Show)
 
 
@@ -36,8 +38,8 @@ instance Aeson.FromJSON Spec where
   parseJSON = Aeson.withObject "Spec" $ \v -> Spec
     <$> v .:? "title" .!= "Reforg Process Specification"
     <*> v .:? "description"
-    <*> v .:? "params" .!= M.empty
-    <*> v .:? "envars" .!= M.empty
+    <*> v .:? "params" .!= HM.empty
+    <*> v .:? "envars" .!= HM.empty
     <*> v .:  "rules"
     <*> v .:? "ignore" .!= []
 
@@ -49,21 +51,21 @@ data Rule = Rule
     ruleTitle        :: !T.Text
     -- | Optional description of the rule in Markdown format for documentation
     -- purposes.
-  ,  ruleDescription :: !(Maybe T.Text)
+  , ruleDescription :: !(Maybe T.Text)
     -- | Templated, key-value map of parameters that override parameters
     -- provided on the command-line and top-level specification parameters.
-  , ruleParams       :: !(M.Map T.Text T.Text)
+  , ruleParams       :: !(HM.HashMap T.Text Template)
     -- | Templated, key-value map of environment variables that override
     -- environment variables found on the Reforg process environment, provided
     -- on the command line and top-level specification.
-  , ruleEnvars       :: !(M.Map T.Text T.Text)
+  , ruleEnvars       :: !(HM.HashMap T.Text Template)
     -- | Templated regular expression that matches the filename of the current
     -- file attempted.
     --
     -- The syntax for the regular expressions are Perl-compatible. All
     -- named-groups will be available to the rest of the rule definition via
     -- @re.@ namespace.
-  , ruleRegex        :: !(Maybe T.Text)
+  , ruleRegex        :: !(Maybe Template)
     -- | Non-empty list of 'Command' definitions to be attempted as per the
     -- attempted file if regular expression matches the filename.
   , ruleProcess      :: !(NE.NonEmpty Command)
@@ -78,9 +80,9 @@ instance Aeson.FromJSON Rule where
   parseJSON = Aeson.withObject "Rule" $ \v -> Rule
     <$> v .:? "title" .!= "Rule"
     <*> v .:? "description"
-    <*> v .:? "params" .!= M.empty
-    <*> v .:? "envars" .!= M.empty
-    <*> v .:? "regex"
+    <*> v .:? "params" .!= HM.empty
+    <*> v .:? "envars" .!= HM.empty
+    <*> v .:? "re"
     <*> v .:  "process"
     <*> v .:? "when"
 
@@ -92,16 +94,16 @@ data When =
     -- | Templated @sh@ expression/script such as:
     --
     -- > [ ! -f "/path/to/a/file"]
-    WhenSh T.Text
+    WhenSh Template
     -- | Templated @bash@ expression/script such as:
     --
     -- > [ ! -f "/path/to/a/file"]
-  | WhenBash T.Text
+  | WhenBash Template
     -- | Templated @python@ expression/script such as:
     --
     -- > import sys
     -- > sys.exit(1)
-  | WhenPython T.Text
+  | WhenPython Template
   deriving (Show)
 
 
@@ -129,12 +131,12 @@ data Command =
     -- | Templated, key-value map of parameters that override parameters provided on the
     -- command-line, top-level specification parameters and parameters of the
     -- rule of process this command belongs to.
-    , execParams      :: !(M.Map T.Text T.Text)
+    , execParams      :: !(HM.HashMap T.Text Template)
     -- | Templated, key-value map of environment variables that override environment
     -- variables found on the Reforg process environment, provided on the
     -- command line, top-level specification and rule of process this command
     -- belongs to.
-    , execEnvars      :: !(M.Map T.Text T.Text)
+    , execEnvars      :: !(HM.HashMap T.Text Template)
     -- | Indication if the command accepts STDIN stream as provided from the
     -- previous process command's STDOUT.
     , execStdin       :: !Bool
@@ -144,7 +146,7 @@ data Command =
     -- | Templated name of or path to the executable of the command.
     , execExecutable  :: !T.Text
     -- | Templated arguments to be passed to the command executable.
-    , execArguments   :: ![T.Text]
+    , execArguments   :: ![Template]
     } deriving (Show)
 
 
@@ -159,8 +161,8 @@ instance Aeson.FromJSON Command where
       makeExec = \v -> Exec
         <$> v .:? "title" .!= "Command"
         <*> v .:? "description"
-        <*> v .:? "params" .!= M.empty
-        <*> v .:? "envars" .!= M.empty
+        <*> v .:? "params" .!= HM.empty
+        <*> v .:? "envars" .!= HM.empty
         <*> v .:? "stdin" .!= True
         <*> v .:? "stdout" .!= True
         <*> v .:  "executable"
