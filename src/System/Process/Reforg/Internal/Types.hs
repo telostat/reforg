@@ -48,30 +48,30 @@ instance Aeson.FromJSON Spec where
 -- matches the file name.
 data Rule = Rule
   { -- | Title of the rule in plain text format for documentation purposes.
-    ruleTitle        :: !T.Text
+    ruleTitle       :: !T.Text
     -- | Optional description of the rule in Markdown format for documentation
     -- purposes.
   , ruleDescription :: !(Maybe T.Text)
     -- | Templated, key-value map of parameters that override parameters
     -- provided on the command-line and top-level specification parameters.
-  , ruleParams       :: !(HM.HashMap T.Text Template)
+  , ruleParams      :: !(HM.HashMap T.Text Template)
     -- | Templated, key-value map of environment variables that override
     -- environment variables found on the Reforg process environment, provided
     -- on the command line and top-level specification.
-  , ruleEnvars       :: !(HM.HashMap T.Text Template)
+  , ruleEnvars      :: !(HM.HashMap T.Text Template)
     -- | Templated regular expression that matches the filename of the current
     -- file attempted.
     --
     -- The syntax for the regular expressions are Perl-compatible. All
     -- named-groups will be available to the rest of the rule definition via
     -- @re.@ namespace.
-  , ruleRegex        :: !(Maybe Template)
+  , ruleRegex       :: !(Maybe Template)
     -- | Non-empty list of 'Command' definitions to be attempted as per the
     -- attempted file if regular expression matches the filename.
-  , ruleProcess      :: !(NE.NonEmpty Command)
+  , ruleProcess     :: !(NE.NonEmpty Command)
     -- | Optional conditional (see 'When') to decide whether the attempted file
     -- should be processed.
-  , ruleWhen         :: !(Maybe When)
+  , ruleWhen        :: !(Maybe When)
   } deriving (Show)
 
 
