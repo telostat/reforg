@@ -36,6 +36,7 @@ library
   exposed-modules:
       System.Process.Reforg
       System.Process.Reforg.Internal.Class
+      System.Process.Reforg.Internal.Fs
       System.Process.Reforg.Internal.Regex
       System.Process.Reforg.Internal.Templating
       System.Process.Reforg.Internal.Types
