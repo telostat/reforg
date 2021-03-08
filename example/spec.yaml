@@ -1,12 +1,13 @@
 name: Sample Reforg specification file.
 description: Sample description
 params:
-  target_directory_root: "example/target"
-  target_directory_subroot_A: "A"
-  target_directory_subroot_Z: "Z"
-  reprefix: ^(?P<recdate>[0-9]{4}\-[0-9]{2}\-[0-9]{2})_
+  - key: target_directory_root
+    value: example/target
+  - key: reprefix
+    value: ^(?P<recdate>[0-9]{4}\-[0-9]{2}\-[0-9]{2})_
 envars:
-  REFORG_HEBELE: hubele
+  - key: REFORG_HEBELE
+    value: hubele
 _command_produce_file: &command_produce_file
   command: exec
   stdin: false
@@ -20,35 +21,25 @@ _command_sink_file: &command_sink_file
 rules:
   - re: "{{ param.reprefix }}A(?P<id>[0-9]+).txt$"
     params:
-      outdir: "{{ param.target_directory_root }}/{{ param.target_directory_subroot_A }}"
-      outfile: "{{ param.target_directory_root }}/{{ param.target_directory_subroot_A }}/{{ re.recdate }}_{{ re.id }}.csv"
+      - key: outdir
+        value: "{{ param.target_directory_root }}/A"
+      - key: outfile
+        value: "{{ param.outdir }}/{{ re.recdate }}_{{ re.id }}.csv"
     when:
       sh: "[ ! -f '{{ param.outfile }}' ]"
     process:
       - command: exec
-        stdin: false
-        stdout: false
-        executable: mkdir
+        executable: sh
         arguments:
-          - "-p"
-          - "{{ param.outdir }}"
-      - <<: *command_produce_file
-        arguments:
-          - "{{ file.path }}"
-      - command: exec
-        stdin: true
-        stdout: true
-        executable: tr
-        arguments:
-          - "|"
-          - ","
-      - <<: *command_sink_file
-        arguments:
-          - "{{ param.outfile }}"
+          - "-c"
+          - >
+            mkdir -p "{{ param.outdir }}" && cat "{{ file.path }}" | tr "|" "," > "{{ param.outfile }}"
   - re: "{{ param.reprefix }}(?P<code>[B-Y])(?P<id>[0-9]+).dat$"
     params:
-      outdir: "{{ param.target_directory_root }}/{{ re.code }}"
-      outfile: "{{ param.target_directory_root }}/{{ re.code }}/{{ re.recdate }}_{{ re.id }}.csv"
+      - key: outdir
+        value: "{{ param.target_directory_root }}/{{ re.code }}"
+      - key: outfile
+        value: "{{ param.outdir }}/{{ re.recdate }}_{{ re.id }}.csv"
     when:
       sh: "[ ! -f '{{ param.outfile }}' ]"
     process:
@@ -71,8 +62,10 @@ rules:
           - "{{ param.outfile }}"
   - re: "{{ param.reprefix }}(?P<code>.)(?P<id>[0-9]+).slk$"
     params:
-      outdir: "{{ param.target_directory_root }}/{{ re.code }}"
-      outfile: "{{ param.target_directory_root }}/{{ re.code }}/{{ re.recdate }}_{{ re.id }}.csv"
+      - key: outdir
+        value: "{{ param.target_directory_root }}/{{ re.code }}"
+      - key: outfile
+        value: "{{ param.outdir }}/{{ re.recdate }}_{{ re.id }}.csv"
     when:
       sh: "[ ! -f '{{ param.outfile }}' ]"
     process:
@@ -94,8 +87,10 @@ rules:
           - "{{ param.outfile }}"
   - re: "{{ param.reprefix }}Z(?P<id>[0-9]+).csv$"
     params:
-      outdir: "{{ param.target_directory_root }}/Z"
-      outfile: "{{ param.target_directory_root }}/Z/{{ re.recdate }}_{{ re.id }}.csv"
+      - key: outdir
+        value: "{{ param.target_directory_root }}/Z"
+      - key: outfile
+        value: "{{ param.target_directory_root }}/Z/{{ re.recdate }}_{{ re.id }}.csv"
     when:
       sh: "[ ! -f '{{ param.outfile }}' ]"
     process:

@@ -6,7 +6,7 @@ import qualified Data.Text                                 as T
 import           Path                                      (Abs, File, Path, fileExtension, filename, toFilePath)
 import           System.Process.Reforg.Internal.Class      (Env(..), Reforg)
 import           System.Process.Reforg.Internal.Templating (Template, renderTemplate)
-import           System.Process.Reforg.Internal.Types      (Command(..), Rule(..), Spec(..))
+import           System.Process.Reforg.Internal.Types      (Command(..), KV(..), Rule(..), Spec(..))
 
 
 -- | Default environment.
@@ -57,13 +57,19 @@ updateExecEnv c = updateParams (execParams c) . updateEnvars (execEnvars c)
 
 
 -- | Updates environment with given environment variable templates.
-updateEnvars :: HM.HashMap T.Text Template -> Env Reforg -> Env Reforg
-updateEnvars ts e = e { envEnvars = HM.union (renderTemplates e ts) (envEnvars e) }
+updateEnvars :: [KV] -> Env Reforg -> Env Reforg
+updateEnvars [] e = e
+updateEnvars ((KV k v) : xs) e = updateEnvars xs newE
+  where
+    newE = e { envEnvars = HM.insert k (renderTemplate v (compileContext e)) (envEnvars e) }
 
 
 -- | Updates environment with given parameter templates.
-updateParams :: HM.HashMap T.Text Template -> Env Reforg -> Env Reforg
-updateParams ts e = e { envParams = HM.union (renderTemplates e ts) (envParams e) }
+updateParams :: [KV] -> Env Reforg -> Env Reforg
+updateParams [] e = e
+updateParams ((KV k v) : xs) e = updateParams xs newE
+  where
+    newE = e { envParams = HM.insert k (renderTemplate v (compileContext e)) (envParams e) }
 
 
 -- | Updates environment with given regular expression match groups.

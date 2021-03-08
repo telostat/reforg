@@ -4,7 +4,6 @@ module System.Process.Reforg.Internal.Types where
 
 import           Data.Aeson                                ((.!=), (.:), (.:?))
 import qualified Data.Aeson                                as Aeson
-import qualified Data.HashMap.Strict                       as HM
 import qualified Data.List.NonEmpty                        as NE
 import qualified Data.Text                                 as T
 import           System.Process.Reforg.Internal.Regex      (Regex)
@@ -20,11 +19,11 @@ data Spec = Spec
   , specDescription :: !(Maybe T.Text)
     -- | Templated, key-value map of parameters that override parameters
     -- provided on the command-line.
-  , specParams      :: !(HM.HashMap T.Text Template)
+  , specParams      :: ![KV]
     -- | Templated, key-value map of environment variables that override
     -- environment variables found on the Reforg process environment and
     -- provided on the command line.
-  , specEnvars      :: !(HM.HashMap T.Text Template)
+  , specEnvars      :: ![KV]
     -- | Non-empty list of rules that will be tried for each file traversed.
   , specRules       :: !(NE.NonEmpty Rule)
     -- | Templated list of regular expressions to filter-out files to be
@@ -38,8 +37,8 @@ instance Aeson.FromJSON Spec where
   parseJSON = Aeson.withObject "Spec" $ \v -> Spec
     <$> v .:? "title" .!= "Reforg Process Specification"
     <*> v .:? "description"
-    <*> v .:? "params" .!= HM.empty
-    <*> v .:? "envars" .!= HM.empty
+    <*> v .:? "params" .!= []
+    <*> v .:? "envars" .!= []
     <*> v .:  "rules"
     <*> v .:? "ignore" .!= []
 
@@ -54,11 +53,11 @@ data Rule = Rule
   , ruleDescription :: !(Maybe T.Text)
     -- | Templated, key-value map of parameters that override parameters
     -- provided on the command-line and top-level specification parameters.
-  , ruleParams      :: !(HM.HashMap T.Text Template)
+  , ruleParams      :: ![KV]
     -- | Templated, key-value map of environment variables that override
     -- environment variables found on the Reforg process environment, provided
     -- on the command line and top-level specification.
-  , ruleEnvars      :: !(HM.HashMap T.Text Template)
+  , ruleEnvars      :: ![KV]
     -- | Templated regular expression that matches the filename of the current
     -- file attempted.
     --
@@ -80,8 +79,8 @@ instance Aeson.FromJSON Rule where
   parseJSON = Aeson.withObject "Rule" $ \v -> Rule
     <$> v .:? "title" .!= "Rule"
     <*> v .:? "description"
-    <*> v .:? "params" .!= HM.empty
-    <*> v .:? "envars" .!= HM.empty
+    <*> v .:? "params" .!= []
+    <*> v .:? "envars" .!= []
     <*> v .:? "re"
     <*> v .:  "process"
     <*> v .:? "when"
@@ -131,12 +130,12 @@ data Command =
     -- | Templated, key-value map of parameters that override parameters provided on the
     -- command-line, top-level specification parameters and parameters of the
     -- rule of process this command belongs to.
-    , execParams      :: !(HM.HashMap T.Text Template)
+    , execParams      :: ![KV]
     -- | Templated, key-value map of environment variables that override environment
     -- variables found on the Reforg process environment, provided on the
     -- command line, top-level specification and rule of process this command
     -- belongs to.
-    , execEnvars      :: !(HM.HashMap T.Text Template)
+    , execEnvars      :: ![KV]
     -- | Indication if the command accepts STDIN stream as provided from the
     -- previous process command's STDOUT.
     , execStdin       :: !Bool
@@ -161,9 +160,23 @@ instance Aeson.FromJSON Command where
       makeExec = \v -> Exec
         <$> v .:? "title" .!= "Command"
         <*> v .:? "description"
-        <*> v .:? "params" .!= HM.empty
-        <*> v .:? "envars" .!= HM.empty
-        <*> v .:? "stdin" .!= True
-        <*> v .:? "stdout" .!= True
+        <*> v .:? "params" .!= []
+        <*> v .:? "envars" .!= []
+        <*> v .:? "stdin" .!= False
+        <*> v .:? "stdout" .!= False
         <*> v .:  "executable"
         <*> v .:? "arguments" .!= []
+
+
+-- | Encoding for key-value pairs.
+data KV = KV
+  { kvKey :: !T.Text
+  , kvVal :: !Template
+  } deriving (Show)
+
+
+-- | 'Aeson.FromJSON' instance for 'Var'.
+instance Aeson.FromJSON KV where
+  parseJSON = Aeson.withObject "KV" $ \v -> KV
+    <$> v .: "key"
+    <*> v .: "value"
