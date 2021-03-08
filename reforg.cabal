@@ -39,6 +39,7 @@ library
       System.Process.Reforg.Internal.Regex
       System.Process.Reforg.Internal.Templating
       System.Process.Reforg.Internal.Types
+      System.Process.Reforg.Internal.Utils
   other-modules:
       Paths_reforg
   hs-source-dirs:
