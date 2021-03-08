@@ -18,11 +18,11 @@ _command_sink_file: &command_sink_file
   stdout: false
   executable: tee
 rules:
-  - re: "{{ params.reprefix }}A(?P<id>[0-9]+).txt$"
+  - re: "{{ param.reprefix }}A(?P<id>[0-9]+).txt$"
     params:
-      outfile: "{{ params.target_directory_root }}/{{ params.target_directory_subroot_A }}/{{ re.recdate }}_{{ re.id }}.csv"
+      outfile: "{{ param.target_directory_root }}/{{ param.target_directory_subroot_A }}/{{ re.recdate }}_{{ re.id }}.csv"
     when:
-      sh: "[ ! -f '{{ params.outfile }}' ]"
+      sh: "[ ! -f '{{ param.outfile }}' ]"
     process:
       - <<: *command_produce_file
         arguments:
@@ -36,12 +36,12 @@ rules:
           - ","
       - <<: *command_sink_file
         arguments:
-          - "{{ params.outfile }}"
+          - "{{ param.outfile }}"
   - re: "{{ reprefix }}(?P<code>[B-Y])(?P<id>[0-9]+).dat$"
     params:
-      outfile: "{{ params.target_directory_root }}/{{ re.code }}/{{ re.recdate }}_{{ re.id }}.csv"
+      outfile: "{{ param.target_directory_root }}/{{ re.code }}/{{ re.recdate }}_{{ re.id }}.csv"
     when:
-      sh: "[ ! -f '{{ params.outfile }}' ]"
+      sh: "[ ! -f '{{ param.outfile }}' ]"
     process:
       - command: exec
         stdin: false
@@ -52,12 +52,12 @@ rules:
           - "{{ file.path }}"
       - <<: *command_sink_file
         arguments:
-          - "{{ params.outfile }}"
+          - "{{ param.outfile }}"
   - re: "{{ reprefix }}(?P<code>.)(?P<id>[0-9]+).slk$"
     params:
-      outfile: "{{ params.target_directory_root }}/{{ re.code }}/{{ re.recdate }}_{{ re.id }}.csv"
+      outfile: "{{ param.target_directory_root }}/{{ re.code }}/{{ re.recdate }}_{{ re.id }}.csv"
     when:
-      sh: "[ ! -f '{{ params.outfile }}' ]"
+      sh: "[ ! -f '{{ param.outfile }}' ]"
     process:
       - command: exec
         stdin: false
@@ -67,12 +67,12 @@ rules:
           - --export-type
           - Gnumeric_stf:stf_csv
           - "{{ file.path }}"
-          - "{{ params.outfile }}"
+          - "{{ param.outfile }}"
   - re: "{{ reprefix }}Z(?P<id>[0-9]+).csv$"
     params:
-      outfile: "{{ params.target_directory_root }}/Z/{{ re.recdate }}_{{ re.id }}.csv"
+      outfile: "{{ param.target_directory_root }}/Z/{{ re.recdate }}_{{ re.id }}.csv"
     when:
-      sh: "[ ! -f '{{ params.outfile }}' ]"
+      sh: "[ ! -f '{{ param.outfile }}' ]"
     process:
       - command: exec
         stdin: false
@@ -81,7 +81,7 @@ rules:
         arguments:
           - --preserve=timestamps
           - "{{ file.path }}"
-          - "{{ params.outfile }}"
+          - "{{ param.outfile }}"
 ignore:
   - ^.*ignore.*$
   - ^.*A000.txt$
