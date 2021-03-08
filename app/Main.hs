@@ -1,18 +1,18 @@
 module Main where
 
-import           Colog                                (richMessageAction)
-import           Control.Monad.IO.Class               (MonadIO(..))
-import           Data.Version                         (showVersion)
-import           Data.Yaml                            (decodeFileEither)
-import qualified Options.Applicative                  as OA
-import           Path                                 (Abs, Dir, File, Path, toFilePath)
-import           Path.IO                              (doesDirExist, doesFileExist, resolveDir', resolveFile')
-import           Paths_reforg                         (version)
-import           System.Exit                          (ExitCode(..), die, exitWith)
-import           System.IO                            (hPutStrLn, stderr)
-import           System.Process.Reforg                (program)
-import           System.Process.Reforg.Internal.Class (Env(Env), ReforgError(..), runReforg)
-import           System.Process.Reforg.Internal.Types (Spec)
+import           Control.Monad.IO.Class                    (MonadIO(..))
+import           Data.Version                              (showVersion)
+import           Data.Yaml                                 (decodeFileEither)
+import qualified Options.Applicative                       as OA
+import           Path                                      (Abs, Dir, File, Path, toFilePath)
+import           Path.IO                                   (doesDirExist, doesFileExist, resolveDir', resolveFile')
+import           Paths_reforg                              (version)
+import           System.Exit                               (ExitCode(..), die, exitWith)
+import           System.IO                                 (hPutStrLn, stderr)
+import           System.Process.Reforg                     (program)
+import           System.Process.Reforg.Internal.Class      (ReforgError(..), runReforg)
+import           System.Process.Reforg.Internal.Contextual (defaultEnv, updateDryrun)
+import           System.Process.Reforg.Internal.Types      (Spec)
 
 
 -- | Main program entry point.
@@ -31,11 +31,14 @@ process fpSpec dryrun dirs = do
   spSpec <- either (liftIO . die) pure =<< ensureFile fpSpec
   spDirs <- either (liftIO . die) pure . sequence =<< mapM ensureDir dirs
   spec <- either (liftIO . die . show) (\x -> pure (x :: Spec)) =<< liftIO (decodeFileEither $ toFilePath spSpec)
-  result <- liftIO $ runReforg (Env spec dryrun richMessageAction) (program spDirs)
+  let env = updateDryrun dryrun defaultEnv
+  result <- liftIO $ runReforg env (program spec spDirs)
   case result of
     Left (ReforgErrorSpec    x) -> liftIO (hPutStrLn stderr $ "Specification Error: " <> x) >> pure (ExitFailure 1)
     Left (ReforgErrorIO      x) -> liftIO (hPutStrLn stderr $ "I/O Error: " <> x) >> pure (ExitFailure 2)
     Left (ReforgErrorProcess x) -> liftIO (hPutStrLn stderr $ "Subprocess Error: " <> x) >> pure (ExitFailure 3)
+    Left (ReforgErrorRegex   x) -> liftIO (hPutStrLn stderr $ "Regex Error: " <> x) >> pure (ExitFailure 4)
+    Left (ReforgErrorNoMatch x) -> liftIO (hPutStrLn stderr $ "No Rule Matched: " <> show x) >> pure (ExitFailure 5)
     Left (ReforgErrorUnknown x) -> liftIO (hPutStrLn stderr $ "Unknown Error: " <> x) >> pure (ExitFailure 42)
     Right _                     -> pure ExitSuccess
 
