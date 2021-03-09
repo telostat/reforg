@@ -1,8 +1,6 @@
 name: Sample Reforg specification file.
 description: Sample description
 params:
-  - key: target_directory_root
-    value: example/target
   - key: reprefix
     value: ^(?P<recdate>[0-9]{4}\-[0-9]{2}\-[0-9]{2})_
 envars:

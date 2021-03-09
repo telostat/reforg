@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6624b21446b01f3346221b5d54166230c1e7030e3c9d2298d9c5edd6c3f0dcdf
+-- hash: bc105abf9225a25c60387d6e1c8ace0e3400995ed0e2e3c70d7a24418caf832b
 
 name:           reforg
 version:        0.0.3.0
@@ -38,6 +38,7 @@ library
       System.Process.Reforg.Internal.Class
       System.Process.Reforg.Internal.Contextual
       System.Process.Reforg.Internal.Fs
+      System.Process.Reforg.Internal.Helpers
       System.Process.Reforg.Internal.Process
       System.Process.Reforg.Internal.Regex
       System.Process.Reforg.Internal.Templating
