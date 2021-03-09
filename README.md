@@ -1,4 +1,4 @@
-# reforg - Organize Files Based on Regular Expressions
+# reforg - Declaratively Organize and Process Files
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/telostat/reforg)
 ![GitHub contributors](https://img.shields.io/github/contributors/telostat/reforg)
@@ -8,18 +8,18 @@
 > the moment. Expect significant breaking changes without notification until we
 > reach the first major version.
 
-`reforg` is a command line application written in Python(3). It reorganizes
-files under given directories based on a set of regex-powered rules. When
-needed, files can be processed while copying them around.
+`reforg` is a command line application written in Haskell. It reorganizes and
+process files under given directories based on a set of regex-powered,
+parameterized and templated declarative rules.
 
-There are no specific requirements for the application to run other than `>=
-Python3.6`.
+The application is tested on GNU/Linux and there are no specific requirements if
+users choose to install the statically linked executable.
 
 ## Installation
 
-```
-curl -o - https://raw.githubusercontent.com/telostat/reforg/main/install.sh | sudo sh -x
-```
+Download the executable from the [latest
+release](https://github.com/telostat/reforg/releases) and put it under your
+`PATH`.
 
 ## Usage
 
@@ -27,56 +27,47 @@ CLI arguments are as follows:
 
 ```
 $ reforg --help
-usage: reforg [-h] --spec SPEC-FILE --root ROOT-DIR [--dry-run] [--metadata]
-              [--force]
-              DIR [DIR ...]
+reforg - Organize and Process Files in Bulk
 
-Organize files based on regular expressions
+Usage: reforg [--version] COMMAND
+  Reforg
 
-positional arguments:
-  DIR               Directory to list files of to process. Note that special
-                    entries in the directory and sub-directories are not
-                    listed and therefore not processed.
+Available options:
+  -h,--help                Show this help text
+  --version                Show version
 
-optional arguments:
-  -h, --help        show this help message and exit
-  --spec SPEC-FILE  Specification file
-  --root ROOT-DIR   Root directory to copy processed files to
-  --dry-run         Dry run (do not copy anything)
-  --metadata        Preserve metadata while copying
-  --force           Force copy if target exists (overwrite existing files)
+Available commands:
+  process                  Process files as per given specification file
+```
 
-reforg -- v0.0.1.dev0
+... in particular:
+
+```
+$ reforg process --help
+Usage: reforg process (-s|--spec SPEC) [-n|--dry-run] [-p|--param KEY=VALUE]
+                      [-e|--envar KEY=VALUE] DIR [DIR...]
+  Process files as per given specification file
+
+Available options:
+  -s,--spec SPEC           Path to reforg specification file (YAML or JSON)
+  -n,--dry-run             Dry run
+  -p,--param KEY=VALUE     Key/Value parameters
+  -e,--envar KEY=VALUE     Environment variables
+  DIR [DIR...]             Paths to directories containing files to process
+  -h,--help                Show this help text
 ```
 
 Example:
 
 ```
-reforg --spec example/spec.json --root example/target/ --metadata --force --dry-run example/source/
+$ reforg process -s example/spec.yaml  -p target_directory_root=example/target example/source
 ```
 
 ## Specification Format
 
-See [./example/spec.json](./example/spec.json) for an example.
+See [./example/spec.yaml](./example/spec.yaml) for an example. Note that we are
+using YAML as specification file format.
 
-Note that we are using JSON as specification file format. A much better file
-format would be YAML (or maybe even TOML). However, we want to stick to the idea
-of external *no-dependencies* for easier deployment. We may wish to change that
-in the future (as well as the implementation language).
-
-For convenience, you may wish to write the specification in YAML (as in
-[./example/spec.yaml](./example/spec.yaml)) and then convert to JSON:
-
-```
-yq . < example/spec.yaml > example/spec.json
-```
-
-... or pipe converted JSON directly to the command (note the `--spec -`
-argument):
-
-```
-yq . < example/spec.yaml | reforg --spec - --root example/target/ --metadata --force --dry-run example/source/
-```
 
 ## License
 
