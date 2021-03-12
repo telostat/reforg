@@ -39,7 +39,7 @@ processFile :: Path Abs File -> [Rule] -> Reforg ()
 processFile f rs =
   ifM (anyM (processFileWithRule f) rs)
     (pure ())
-    (throwError $ ReforgErrorNoMatch f)
+    (error $ "No match for: " <> toFilePath f)  -- TODO: Shortcircuit? (throwError $ ReforgErrorNoMatch f)
 
 
 -- | Attempts to process the file as per given rule.
