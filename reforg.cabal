@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bc105abf9225a25c60387d6e1c8ace0e3400995ed0e2e3c70d7a24418caf832b
+-- hash: d9ca5830d1e33bcf6ad816742d975eade9d016833bf9aa4e32ad514f96a19008
 
 name:           reforg
-version:        0.0.3.0
+version:        0.0.3.1
 synopsis:       Organize and Process Files Based on Regular Expressions
 description:    Please see the README on GitHub at <https://github.com/telostat/reforg#readme>
 category:       Filesystem, System
