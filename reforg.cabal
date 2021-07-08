@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d9ca5830d1e33bcf6ad816742d975eade9d016833bf9aa4e32ad514f96a19008
+-- hash: 88a232c5509792b835f526c0804d0b264dfc228e1bf817473c786af0005c195f
 
 name:           reforg
 version:        0.0.3.1
@@ -48,7 +48,8 @@ library
       Paths_reforg
   hs-source-dirs:
       src
-  default-extensions: OverloadedStrings
+  default-extensions:
+      OverloadedStrings
   ghc-options: -Wall
   build-depends:
       aeson
@@ -57,7 +58,7 @@ library
     , co-log
     , ginger
     , mtl
-    , path >=0.8 && <0.9
+    , path ==0.8.*
     , path-io
     , pcre-light
     , process
@@ -83,7 +84,7 @@ executable reforg
     , ginger
     , mtl
     , optparse-applicative
-    , path >=0.8 && <0.9
+    , path ==0.8.*
     , path-io
     , pcre-light
     , process
@@ -103,7 +104,7 @@ test-suite reforg-doctest
   other-modules:
       Paths_reforg
   hs-source-dirs:
-      ./.
+      ./
   ghc-options: -threaded
   build-depends:
       aeson
@@ -113,7 +114,7 @@ test-suite reforg-doctest
     , doctest
     , ginger
     , mtl
-    , path >=0.8 && <0.9
+    , path ==0.8.*
     , path-io
     , pcre-light
     , process
@@ -140,7 +141,7 @@ test-suite reforg-test
     , co-log
     , ginger
     , mtl
-    , path >=0.8 && <0.9
+    , path ==0.8.*
     , path-io
     , pcre-light
     , process
